@@ -15,5 +15,5 @@ from urllib.parse import urlparse
 from pathlib import Path
 import telebot
 ```
-You also need to find a bot in the Telegram named **[SSL Certificate Checker](t.me/SSL_Certificate_CheckerBot)**
+You also need to find a bot in the Telegram named **[SSL Certificate Checker](https://t.me/SSL_Certificate_CheckerBot)**
 
