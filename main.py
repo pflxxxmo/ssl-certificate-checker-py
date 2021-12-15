@@ -1,39 +1,34 @@
 import ssl
-from time import time
-from datetime import datetime
+import os
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from datetime import datetime, timedelta
 from urllib.parse import urlparse
-from pathlib import Path
 import telebot
 
 # access token for telegram bot
-access_token = ''
-# the time to notify of the expiration of the certificate   
-notice_date = 432000
+access_token = os.environ.get('API_KEY')
+# the time to notify of the expiration of the certificate(days)
+notice_date = 10
 bot = telebot.TeleBot(access_token)
 
 
-def check_certificate(url):
+def check_certificate(url: str):
     parsed_url = urlparse(url)
     try:
         cert = ssl.get_server_certificate(
             (parsed_url.hostname, parsed_url.port or 443))
     except Exception:
         return "Bad request"
-    # save cert to temporary file (filename required for _test_decode_cert())
-    temp_filename = Path(__file__).parent / "temp.crt"
-    with open(temp_filename, "w") as f:
-        f.write(cert)
     try:
-        parsed_cert = ssl._ssl._test_decode_cert(temp_filename)
+        parsed_cert = x509.load_pem_x509_certificate(str.encode(cert), default_backend())
     except Exception:
         return
-    finally:  # delete temporary file
-        temp_filename.unlink()
-    date = ssl.cert_time_to_seconds(parsed_cert["notAfter"])
-    if date < time() or (date - time()) <= notice_date:
-        return f'ALARM‼️. The certificate for url {url} was expired in {datetime.utcfromtimestamp(date).strftime("%b %d %Y %Z")}'
+    date = parsed_cert.not_valid_after
+    if date < datetime.today() or (date - datetime.today()) <= timedelta(notice_date):
+        return f'ALARM‼️. The certificate for url {url} was expired in {date}'
     else:
-        return f'OK🆗.The certificate for url {url} expires in {datetime.utcfromtimestamp(date).strftime("%b %d %Y %Z")}'
+        return f'OK🆗.The certificate for url {url} expires in {date}'
 
 
 @bot.message_handler(content_types=['text'])
