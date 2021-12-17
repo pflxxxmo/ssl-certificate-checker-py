@@ -7,14 +7,14 @@ from logging import error, basicConfig, INFO, info
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
-import telebot
+from telebot import TeleBot
 from telebot.types import Message
 
 # access token for telegram bot
 access_token = environ.get('API_KEY')
 # the time to notify of the expiration of the certificate(days)
 notice_date = 10
-bot = telebot.TeleBot(access_token)
+bot = TeleBot(access_token)
 
 
 def check_certificate(url: str) -> tuple:
@@ -46,9 +46,9 @@ def prepare_for_response(url: str) -> str:
         return 'The certificate at this URL does not exist'
     else:
         if result:
-            return f'ALARM‼️. The certificate for url {url} was expired in {date}'
+            return 'ALARM‼️. The certificate for url {0} was expired in {1}'.format(url, date)
         else:
-            return f'OK🆗.The certificate for url {url} expires in {date}'
+            return 'OK🆗.The certificate for url {0} expires in {1}'.format(url, date)
 
 
 @bot.message_handler(content_types=['text'])
